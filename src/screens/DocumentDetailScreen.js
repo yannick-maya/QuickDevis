@@ -1,24 +1,27 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, InteractionManager, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { convertQuoteToInvoice, getDocument, updateDocumentStatus } from '../db/database';
 import { createDocumentPdf, previewDocumentPdf, shareDocumentPdf } from '../utils/pdf';
 import { formatMoney } from '../utils/format';
 
 export default function DocumentDetailScreen({ route, navigation }) {
   const [document, setDocument] = useState(null);
+  const previewStarted = useRef(false);
   const load = useCallback(() => { getDocument(route.params.id).then(setDocument).catch(() => {}); }, [route.params.id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
   useEffect(() => {
-    if (document && route.params?.preview) {
-      previewDocumentPdf(document).catch(() => Alert.alert('Aperçu indisponible', 'L’aperçu PDF est disponible sur Android/iOS, pas dans Expo Web.'));
+    if (document && route.params?.preview && !previewStarted.current) {
+      previewStarted.current = true;
+      InteractionManager.runAfterInteractions(() => {
+        previewDocumentPdf(document).catch(() => Alert.alert('Aperçu indisponible', 'L’aperçu PDF est disponible sur Android/iOS, pas dans Expo Web.'));
+      });
       navigation.setParams({ preview: false });
     }
   }, [document, navigation, route.params?.preview]);
 
   async function convert() {
-    await convertQuoteToInvoice(document.id);
-    Alert.alert('Facture créée', 'La facture a été créée à partir de ce devis.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+    try { await convertQuoteToInvoice(document.id); Alert.alert('Facture créée', 'La facture a été créée à partir de ce devis.', [{ text: 'OK', onPress: () => navigation.goBack() }]); } catch { Alert.alert('Erreur', 'Impossible de convertir ce devis en facture.'); }
   }
 
   async function generatePdf() {
@@ -30,8 +33,7 @@ export default function DocumentDetailScreen({ route, navigation }) {
   }
 
   async function changeStatus(status) {
-    await updateDocumentStatus(document.id, status);
-    setDocument({ ...document, statut: status });
+    try { await updateDocumentStatus(document.id, status); setDocument({ ...document, statut: status }); } catch { Alert.alert('Erreur', 'Impossible de modifier le statut du document.'); }
   }
 
   if (!document) return <View style={styles.empty}><Text>Chargement du document...</Text></View>;

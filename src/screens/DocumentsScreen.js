@@ -35,8 +35,12 @@ export default function DocumentsScreen({ navigation }) {
   }
   async function save() {
     if (!lines.length) { Alert.alert('Document vide', 'Ajoutez au moins une ligne ou revenez modifier le document.'); return; }
-    const documentId = await createDocument({ type, clientId, lines });
-    setLines([]); setClientId(null); setStep(0); refresh(); navigation.navigate('DocumentDetail', { id: documentId, preview: true });
+    try {
+      const documentId = await createDocument({ type, clientId, lines });
+      setLines([]); setClientId(null); setStep(0); refresh(); navigation.navigate('DocumentDetail', { id: documentId, preview: true });
+    } catch (error) {
+      Alert.alert('Enregistrement impossible', error?.message || 'La base locale n’a pas pu enregistrer ce document.');
+    }
   }
   function next() { setStep((current) => Math.min(current + 1, steps.length - 1)); }
 
