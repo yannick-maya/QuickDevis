@@ -14,8 +14,12 @@ export async function createDocumentPdf(document, company = {}) {
   return Print.printToFileAsync({ html: buildDocumentHtml(document, company) });
 }
 
-export async function previewDocumentPdf(document, company = {}) {
-  return Print.printAsync({ html: buildDocumentHtml(document, company) });
+export async function openDocumentPdf(document, company = {}) {
+  const file = await createDocumentPdf(document, company);
+  const available = await Sharing.isAvailableAsync();
+  if (!available) throw new Error('Le partage système est indisponible sur cet appareil.');
+  await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: 'Ouvrir l’aperçu PDF' });
+  return file.uri;
 }
 
 export async function shareDocumentPdf(document, company) {
