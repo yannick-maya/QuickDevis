@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#F7F4EE', padding: 20 },
   form: { backgroundColor: '#FFFFFF', borderColor: '#E6E0D6', borderRadius: 8, borderWidth: 1, marginBottom: 20, padding: 14 },
   input: { backgroundColor: '#FFFFFF', borderColor: '#D9D4CB', borderRadius: 7, borderWidth: 1, color: '#202522', fontSize: 15, marginBottom: 10, minHeight: 48, paddingHorizontal: 14 },
-  button: { alignItems: 'center', backgroundColor: '#B45A3C', borderRadius: 7, minHeight: 48, justifyContent: 'center' },
+  button: { alignItems: 'center', backgroundColor: '#1677FF', borderRadius: 7, minHeight: 48, justifyContent: 'center' },
   buttonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   actions: { alignItems: 'flex-end', gap: 8 },
   edit: { color: '#203B35', fontSize: 12, fontWeight: '700' },

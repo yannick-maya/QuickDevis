@@ -1,8 +1,9 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { formatMoney } from './format';
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
-const money = (value) => `${Number(value || 0).toFixed(2).replace('.', ',')} EUR`;
+const money = formatMoney;
 
 export async function createDocumentPdf(document, company = {}) {
   const rows = document.lines.map((line) => `<tr><td>${escapeHtml(line.description)}</td><td>${line.quantite}</td><td>${money(line.prix_unitaire)}</td><td>${money(line.total_ligne)}</td></tr>`).join('');
@@ -12,6 +13,8 @@ export async function createDocumentPdf(document, company = {}) {
 
 export async function shareDocumentPdf(document, company) {
   const file = await createDocumentPdf(document, company);
-  if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', dialogTitle: 'Partager le document' });
+  const available = await Sharing.isAvailableAsync();
+  if (!available) throw new Error('Le partage système est indisponible sur cet appareil.');
+  await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: 'Partager le document' });
   return file.uri;
 }
