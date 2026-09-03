@@ -3,14 +3,14 @@
 ## 1. Setup du projet
 - [ ] Installer Node.js LTS
 - [ ] Installer Expo CLI (`npm install -g expo-cli` ou utiliser `npx` directement)
-- [ ] Créer le projet : `npx create-expo-app QuickDevis`
-- [ ] Installer les dépendances :
+- [x] Créer le projet : `npx create-expo-app QuickDevis`
+- [x] Installer les dépendances :
   - `npx expo install expo-sqlite`
   - `npx expo install expo-print expo-sharing expo-file-system`
   - `npm install @react-navigation/native @react-navigation/native-stack`
   - `npx expo install react-native-screens react-native-safe-area-context`
   - `npm install date-fns`
-- [ ] Structurer les dossiers :
+- [x] Structurer les dossiers :
   ```
   /src
     /screens
@@ -20,17 +20,17 @@
   ```
 
 ## 2. Base de données (SQLite)
-- [ ] Créer `src/db/schema.sql` avec les tables : `clients`, `produits`, `documents`, `document_lignes`, `entreprise` (paramètres/infos société pour le PDF)
-- [ ] Créer `src/db/database.js` (init de la connexion + exécution du schéma au premier lancement)
-- [ ] Fonctions CRUD clients (créer, lire, modifier, supprimer, rechercher)
+- [x] Créer `src/db/schema.sql` avec les tables : `clients`, `produits`, `documents`, `document_lignes`, `entreprise` (paramètres/infos société pour le PDF)
+- [x] Créer `src/db/database.js` (init de la connexion + exécution du schéma au premier lancement)
+- [x] Fonctions CRUD clients (créer, lire, modifier, supprimer, rechercher)
 - [ ] Fonctions CRUD produits/services
 - [ ] Fonctions CRUD documents (devis/factures) + leurs lignes (produit, main d'œuvre, ou ligne libre)
 - [ ] Fonction "convertir devis en facture" (duplique le document avec `type = 'facture'`, garde le lien historique)
 - [ ] Fonctions de stats pour le dashboard (nb clients, total facturé, total en attente, etc.)
 
 ## 3. Écrans
-- [ ] Dashboard (stats + accès rapide)
-- [ ] Liste clients (recherche/filtre)
+- [x] Dashboard (stats + accès rapide)
+- [x] Liste clients (recherche/filtre)
 - [ ] Fiche client (infos + historique de ses devis/factures)
 - [ ] Formulaire ajout/édition client
 - [ ] Liste produits/services
