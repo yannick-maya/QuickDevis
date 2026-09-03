@@ -36,7 +36,7 @@
 - [x] Liste produits/services
 - [x] Formulaire ajout/édition produit
 - [ ] Liste devis/factures (filtres : type, statut, date)
-- [ ] Formulaire création devis/facture (choix client + lignes depuis produits, ligne libre, ou **ligne main d'œuvre** avec champ dédié pour le prix de main d'œuvre)
+- [x] Formulaire création devis/facture (choix client + lignes depuis produits, ligne libre, ou **ligne main d'œuvre** avec champ dédié pour le prix de main d'œuvre)
 - [ ] Détail d'un document + bouton "Convertir en facture" (si devis)
 - [ ] Génération PDF (`expo-print`) avec logo/infos entreprise
 - [ ] Partage du PDF (`expo-sharing`) — WhatsApp, email, etc.

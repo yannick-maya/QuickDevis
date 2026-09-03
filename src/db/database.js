@@ -66,6 +66,20 @@ export async function listDocuments() {
   return database.getAllAsync('SELECT documents.*, clients.nom AS client_nom FROM documents JOIN clients ON clients.id = documents.client_id ORDER BY date_creation DESC');
 }
 
+export async function createDocument({ type, clientId, lines }) {
+  const database = await getDatabase();
+  const prefix = type === 'facture' ? 'FAC' : 'DEV';
+  const numero = `${prefix}-${Date.now()}`;
+  const total = lines.reduce((sum, line) => sum + line.quantite * line.prix_unitaire, 0);
+  return database.withTransactionAsync(async () => {
+    const document = await database.runAsync('INSERT INTO documents (type, numero, client_id, total) VALUES (?, ?, ?, ?)', type, numero, clientId, total);
+    for (const line of lines) {
+      await database.runAsync('INSERT INTO document_lignes (document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) VALUES (?, ?, ?, ?, ?, ?, ?)', document.lastInsertRowId, line.produit_id || null, line.type_ligne, line.description, line.quantite, line.prix_unitaire, line.quantite * line.prix_unitaire);
+    }
+    return document.lastInsertRowId;
+  });
+}
+
 export async function getDashboardStats() {
   const database = await getDatabase();
   const clients = await database.getFirstAsync('SELECT COUNT(*) AS total FROM clients');
