@@ -55,7 +55,7 @@
 - [ ] Test sur téléphone iOS réel via Expo Go (si disponible)
 
 ## 5. Finalisation avant envoi au client
-- [ ] Icône de l'app + splash screen (`app.json`)
+- [x] Icône de l'app + splash screen (`app.json`)
 - [x] Nom de l'app (**QuickDevis**), identifiant (`bundle identifier` / `package name`, ex : `com.tonnom.quickdevis`)
 - [ ] Build avec EAS Build (`eas build`) pour générer un vrai APK (Android) ou IPA (iOS)
 - [ ] Installer et tester le build final sur un téléphone avant envoi
