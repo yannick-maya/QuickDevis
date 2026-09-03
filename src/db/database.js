@@ -79,6 +79,11 @@ export async function getDocument(id) {
   return { ...document, lines };
 }
 
+export async function updateDocumentStatus(id, statut) {
+  const database = await getDatabase();
+  await database.runAsync('UPDATE documents SET statut = ? WHERE id = ?', statut, id);
+}
+
 export async function convertQuoteToInvoice(quoteId) {
   const database = await getDatabase();
   const quote = await getDocument(quoteId);
