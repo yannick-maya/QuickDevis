@@ -25,6 +25,17 @@ export async function getDatabase() {
           await database.execAsync('DROP TABLE documents_legacy');
         });
       }
+      const lineForeignKeys = await database.getAllAsync('PRAGMA foreign_key_list(document_lignes)');
+      if (lineForeignKeys.some((foreignKey) => foreignKey.table === 'documents_legacy')) {
+        await database.withTransactionAsync(async () => {
+          await database.execAsync('PRAGMA foreign_keys = OFF');
+          await database.execAsync('ALTER TABLE document_lignes RENAME TO document_lignes_repair');
+          await database.execAsync('CREATE TABLE document_lignes (id INTEGER PRIMARY KEY AUTOINCREMENT, document_id INTEGER NOT NULL, produit_id INTEGER, type_ligne TEXT CHECK(type_ligne IN (\'produit\', \'main_oeuvre\', \'libre\')) DEFAULT \'produit\', description TEXT NOT NULL, quantite REAL NOT NULL, prix_unitaire REAL NOT NULL, total_ligne REAL NOT NULL, FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE, FOREIGN KEY (produit_id) REFERENCES produits(id))');
+          await database.execAsync('INSERT INTO document_lignes (id, document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) SELECT id, document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne FROM document_lignes_repair');
+          await database.execAsync('DROP TABLE document_lignes_repair');
+          await database.execAsync('PRAGMA foreign_keys = ON');
+        });
+      }
       return database;
     });
   }
