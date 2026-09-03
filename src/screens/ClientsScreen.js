@@ -8,6 +8,7 @@ export default function ClientsScreen() {
   const [search, setSearch] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   const refresh = useCallback(() => { listClients(search).then(setClients).catch(() => {}); }, [search]);
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
@@ -15,8 +16,10 @@ export default function ClientsScreen() {
   async function addClient() {
     if (!name.trim()) return Alert.alert('Nom requis', 'Saisissez le nom du client.');
     await saveClient({ nom: name.trim(), telephone: phone.trim() });
-    setName(''); setPhone(''); refresh();
+    setName(''); setPhone(''); setEditingId(null); refresh();
   }
+
+  function editClient(client) { setEditingId(client.id); setName(client.nom); setPhone(client.telephone || ''); }
 
   function removeClient(client) {
     Alert.alert('Supprimer le client ?', client.nom, [{ text: 'Annuler', style: 'cancel' }, { text: 'Supprimer', style: 'destructive', onPress: async () => { await deleteClient(client.id); refresh(); } }]);
@@ -28,10 +31,10 @@ export default function ClientsScreen() {
       <View style={styles.form}>
         <TextInput placeholder="Nom du client" placeholderTextColor="#89918B" value={name} onChangeText={setName} style={styles.input} />
         <TextInput placeholder="Téléphone (optionnel)" placeholderTextColor="#89918B" value={phone} onChangeText={setPhone} keyboardType="phone-pad" style={styles.input} />
-        <Pressable style={styles.button} onPress={addClient}><Text style={styles.buttonText}>Ajouter le client</Text></Pressable>
+        <Pressable style={styles.button} onPress={addClient}><Text style={styles.buttonText}>{editingId ? 'Modifier le client' : 'Ajouter le client'}</Text></Pressable>
       </View>
       <FlatList data={clients} keyExtractor={(item) => String(item.id)} ListEmptyComponent={<Text style={styles.empty}>Aucun client pour le moment.</Text>} renderItem={({ item }) => (
-        <View style={styles.row}><View><Text style={styles.name}>{item.nom}</Text><Text style={styles.detail}>{item.telephone || 'Coordonnées à compléter'}</Text></View><Pressable accessibilityLabel={`Supprimer ${item.nom}`} onPress={() => removeClient(item)}><Text style={styles.delete}>Supprimer</Text></Pressable></View>
+        <View style={styles.row}><View><Text style={styles.name}>{item.nom}</Text><Text style={styles.detail}>{item.telephone || 'Coordonnées à compléter'}</Text></View><View style={styles.actions}><Pressable onPress={() => editClient(item)}><Text style={styles.edit}>Modifier</Text></Pressable><Pressable accessibilityLabel={`Supprimer ${item.nom}`} onPress={() => removeClient(item)}><Text style={styles.delete}>Supprimer</Text></Pressable></View></View>
       )} />
     </View>
   );
@@ -43,6 +46,8 @@ const styles = StyleSheet.create({
   input: { backgroundColor: '#FFFFFF', borderColor: '#D9D4CB', borderRadius: 7, borderWidth: 1, color: '#202522', fontSize: 15, marginBottom: 10, minHeight: 48, paddingHorizontal: 14 },
   button: { alignItems: 'center', backgroundColor: '#B45A3C', borderRadius: 7, minHeight: 48, justifyContent: 'center' },
   buttonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  actions: { alignItems: 'flex-end', gap: 8 },
+  edit: { color: '#203B35', fontSize: 12, fontWeight: '700' },
   row: { alignItems: 'center', backgroundColor: '#FFFFFF', borderBottomColor: '#ECE7DE', borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', minHeight: 72, paddingHorizontal: 14 },
   name: { color: '#203B35', fontSize: 16, fontWeight: '800' },
   detail: { color: '#7B847D', marginTop: 4 },
