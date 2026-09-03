@@ -115,3 +115,27 @@ export async function getDashboardStats() {
   const documents = await database.getAllAsync('SELECT statut, COUNT(*) AS total FROM documents GROUP BY statut');
   return { clients: clients.total, factures: factures.total, attente: attente.total, documents };
 }
+
+export async function getCompany() {
+  const database = await getDatabase();
+  return database.getFirstAsync('SELECT * FROM entreprise ORDER BY id LIMIT 1');
+}
+
+export async function saveCompany(company) {
+  const database = await getDatabase();
+  const current = await getCompany();
+  if (current) {
+    await database.runAsync('UPDATE entreprise SET nom = ?, adresse = ?, telephone = ?, email = ?, logo_uri = ? WHERE id = ?', company.nom || null, company.adresse || null, company.telephone || null, company.email || null, company.logo_uri || null, current.id);
+    return current.id;
+  }
+  const result = await database.runAsync('INSERT INTO entreprise (nom, adresse, telephone, email, logo_uri) VALUES (?, ?, ?, ?, ?)', company.nom || null, company.adresse || null, company.telephone || null, company.email || null, company.logo_uri || null);
+  return result.lastInsertRowId;
+}
+
+export async function exportDatabaseData() {
+  const database = await getDatabase();
+  const [clients, products, documents, lines, company] = await Promise.all([
+    database.getAllAsync('SELECT * FROM clients'), database.getAllAsync('SELECT * FROM produits'), database.getAllAsync('SELECT * FROM documents'), database.getAllAsync('SELECT * FROM document_lignes'), getCompany(),
+  ]);
+  return { exportedAt: new Date().toISOString(), company, clients, products, documents, lines };
+}
