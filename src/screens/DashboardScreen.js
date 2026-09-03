@@ -27,6 +27,7 @@ export default function DashboardScreen({ navigation }) {
       <Pressable style={styles.action} onPress={() => navigation.navigate('Products')}><Text style={styles.actionTitle}>Gérer les produits et services</Text><Text style={styles.actionArrow}>›</Text></Pressable>
       <Pressable style={styles.action} onPress={() => navigation.navigate('Documents')}><Text style={styles.actionTitle}>Créer un devis ou une facture</Text><Text style={styles.actionArrow}>›</Text></Pressable>
       <Pressable style={styles.action} onPress={() => navigation.navigate('Settings')}><Text style={styles.actionTitle}>Paramètres et sauvegarde</Text><Text style={styles.actionArrow}>›</Text></Pressable>
+      <Pressable style={styles.action} onPress={() => navigation.navigate('History')}><Text style={styles.actionTitle}>Voir l’historique</Text><Text style={styles.actionArrow}>›</Text></Pressable>
     </View>
   );
 }

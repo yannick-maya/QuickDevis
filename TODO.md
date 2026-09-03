@@ -40,7 +40,7 @@
 - [x] Détail d'un document + bouton "Convertir en facture" (si devis)
 - [x] Génération PDF (`expo-print`) avec logo/infos entreprise
 - [x] Partage du PDF (`expo-sharing`) — WhatsApp, email, etc.
-- [ ] Écran historique global (chronologique, filtrable)
+- [x] Écran historique global (chronologique, filtrable)
 - [x] Écran paramètres (infos entreprise, logo)
 - [x] Export/sauvegarde de la base (JSON ou copie du fichier SQLite) — important car tout est en local
 
