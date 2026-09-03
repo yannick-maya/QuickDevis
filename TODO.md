@@ -25,7 +25,7 @@
 - [x] Fonctions CRUD clients (créer, lire, modifier, supprimer, rechercher)
 - [x] Fonctions CRUD produits/services
 - [ ] Fonctions CRUD documents (devis/factures) + leurs lignes (produit, main d'œuvre, ou ligne libre)
-- [ ] Fonction "convertir devis en facture" (duplique le document avec `type = 'facture'`, garde le lien historique)
+- [x] Fonction "convertir devis en facture" (duplique le document avec `type = 'facture'`, garde le lien historique)
 - [ ] Fonctions de stats pour le dashboard (nb clients, total facturé, total en attente, etc.)
 
 ## 3. Écrans
@@ -35,9 +35,9 @@
 - [ ] Formulaire ajout/édition client
 - [x] Liste produits/services
 - [x] Formulaire ajout/édition produit
-- [ ] Liste devis/factures (filtres : type, statut, date)
+- [x] Liste devis/factures (filtres : type, statut, date)
 - [x] Formulaire création devis/facture (choix client + lignes depuis produits, ligne libre, ou **ligne main d'œuvre** avec champ dédié pour le prix de main d'œuvre)
-- [ ] Détail d'un document + bouton "Convertir en facture" (si devis)
+- [x] Détail d'un document + bouton "Convertir en facture" (si devis)
 - [ ] Génération PDF (`expo-print`) avec logo/infos entreprise
 - [ ] Partage du PDF (`expo-sharing`) — WhatsApp, email, etc.
 - [ ] Écran historique global (chronologique, filtrable)

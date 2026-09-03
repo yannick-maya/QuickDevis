@@ -61,9 +61,36 @@ export async function deleteProduct(id) {
   await database.runAsync('DELETE FROM produits WHERE id = ?', id);
 }
 
-export async function listDocuments() {
+export async function listDocuments(filters = {}) {
   const database = await getDatabase();
-  return database.getAllAsync('SELECT documents.*, clients.nom AS client_nom FROM documents JOIN clients ON clients.id = documents.client_id ORDER BY date_creation DESC');
+  const clauses = [];
+  const values = [];
+  if (filters.type) { clauses.push('documents.type = ?'); values.push(filters.type); }
+  if (filters.statut) { clauses.push('documents.statut = ?'); values.push(filters.statut); }
+  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  return database.getAllAsync(`SELECT documents.*, clients.nom AS client_nom FROM documents JOIN clients ON clients.id = documents.client_id ${where} ORDER BY date_creation DESC`, values);
+}
+
+export async function getDocument(id) {
+  const database = await getDatabase();
+  const document = await database.getFirstAsync('SELECT documents.*, clients.nom AS client_nom FROM documents JOIN clients ON clients.id = documents.client_id WHERE documents.id = ?', id);
+  if (!document) return null;
+  const lines = await database.getAllAsync('SELECT * FROM document_lignes WHERE document_id = ? ORDER BY id', id);
+  return { ...document, lines };
+}
+
+export async function convertQuoteToInvoice(quoteId) {
+  const database = await getDatabase();
+  const quote = await getDocument(quoteId);
+  if (!quote || quote.type !== 'devis') throw new Error('Devis introuvable');
+  const numero = `FAC-${Date.now()}`;
+  return database.withTransactionAsync(async () => {
+    const invoice = await database.runAsync('INSERT INTO documents (type, numero, client_id, total, devis_origine_id) VALUES (?, ?, ?, ?, ?)', 'facture', numero, quote.client_id, quote.total, quote.id);
+    for (const line of quote.lines) {
+      await database.runAsync('INSERT INTO document_lignes (document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) VALUES (?, ?, ?, ?, ?, ?, ?)', invoice.lastInsertRowId, line.produit_id, line.type_ligne, line.description, line.quantite, line.prix_unitaire, line.total_ligne);
+    }
+    return invoice.lastInsertRowId;
+  });
 }
 
 export async function createDocument({ type, clientId, lines }) {

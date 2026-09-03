@@ -5,8 +5,10 @@ import { createDocument, listClients, listDocuments, listProducts } from '../db/
 
 const formatMoney = (value) => `${Number(value || 0).toFixed(2).replace('.', ',')} EUR`;
 
-export default function DocumentsScreen() {
+export default function DocumentsScreen({ navigation }) {
   const [documents, setDocuments] = useState([]);
+  const [filterType, setFilterType] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
   const [type, setType] = useState('devis');
@@ -18,7 +20,7 @@ export default function DocumentsScreen() {
   const [price, setPrice] = useState('');
   const [lines, setLines] = useState([]);
 
-  const refresh = useCallback(() => { Promise.all([listDocuments(), listClients(), listProducts()]).then(([nextDocuments, nextClients, nextProducts]) => { setDocuments(nextDocuments); setClients(nextClients); setProducts(nextProducts); }).catch(() => {}); }, []);
+  const refresh = useCallback(() => { Promise.all([listDocuments({ type: filterType, statut: filterStatus }), listClients(), listProducts()]).then(([nextDocuments, nextClients, nextProducts]) => { setDocuments(nextDocuments); setClients(nextClients); setProducts(nextProducts); }).catch(() => {}); }, [filterStatus, filterType]);
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
   function chooseProduct(product) { setProductId(product.id); setDescription(product.nom); setPrice(String(product.prix_unitaire)); }
@@ -53,7 +55,9 @@ export default function DocumentsScreen() {
     <Text style={styles.total}>Total : {formatMoney(lines.reduce((sum, line) => sum + line.quantite * line.prix_unitaire, 0))}</Text>
     <Pressable style={styles.button} onPress={save}><Text style={styles.buttonText}>Enregistrer le {type}</Text></Pressable>
     <Text style={styles.heading}>Documents récents</Text>
-    <FlatList scrollEnabled={false} data={documents} keyExtractor={(item) => String(item.id)} ListEmptyComponent={<Text style={styles.empty}>Aucun document créé.</Text>} renderItem={({ item }) => <View style={styles.line}><Text style={styles.lineName}>{item.numero} · {item.client_nom}</Text><Text style={styles.lineDetail}>{item.type} · {formatMoney(item.total)} · {item.statut}</Text></View>} />
+    <View style={styles.segment}><Pressable style={[styles.segmentButton, !filterType && styles.selected]} onPress={() => setFilterType('')}><Text style={styles.segmentText}>Tous</Text></Pressable><Pressable style={[styles.segmentButton, filterType === 'devis' && styles.selected]} onPress={() => setFilterType('devis')}><Text style={styles.segmentText}>Devis</Text></Pressable><Pressable style={[styles.segmentButton, filterType === 'facture' && styles.selected]} onPress={() => setFilterType('facture')}><Text style={styles.segmentText}>Factures</Text></Pressable></View>
+    <View style={styles.segment}><Pressable style={[styles.segmentButton, !filterStatus && styles.selected]} onPress={() => setFilterStatus('')}><Text style={styles.segmentText}>Tous statuts</Text></Pressable><Pressable style={[styles.segmentButton, filterStatus === 'payé' && styles.selected]} onPress={() => setFilterStatus('payé')}><Text style={styles.segmentText}>Payé</Text></Pressable><Pressable style={[styles.segmentButton, filterStatus === 'brouillon' && styles.selected]} onPress={() => setFilterStatus('brouillon')}><Text style={styles.segmentText}>Brouillon</Text></Pressable></View>
+    <FlatList scrollEnabled={false} data={documents} keyExtractor={(item) => String(item.id)} ListEmptyComponent={<Text style={styles.empty}>Aucun document créé.</Text>} renderItem={({ item }) => <Pressable onPress={() => navigation.navigate('DocumentDetail', { id: item.id })} style={styles.line}><Text style={styles.lineName}>{item.numero} · {item.client_nom}</Text><Text style={styles.lineDetail}>{item.type} · {formatMoney(item.total)} · {item.statut}</Text></Pressable>} />
   </ScrollView>;
 }
 
