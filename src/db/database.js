@@ -15,6 +15,16 @@ export async function getDatabase() {
   if (!databasePromise) {
     databasePromise = SQLite.openDatabaseAsync('quickdevis.db').then(async (database) => {
       await database.execAsync(schema);
+      const columns = await database.getAllAsync('PRAGMA table_info(documents)');
+      const clientColumn = columns.find((column) => column.name === 'client_id');
+      if (clientColumn?.notnull) {
+        await database.withTransactionAsync(async () => {
+          await database.execAsync('ALTER TABLE documents RENAME TO documents_legacy');
+          await database.execAsync('CREATE TABLE documents (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT CHECK(type IN (\'devis\', \'facture\')) NOT NULL, numero TEXT UNIQUE NOT NULL, client_id INTEGER, date_creation TEXT DEFAULT CURRENT_TIMESTAMP, date_echeance TEXT, statut TEXT DEFAULT \'brouillon\', total REAL DEFAULT 0, devis_origine_id INTEGER, FOREIGN KEY (client_id) REFERENCES clients(id), FOREIGN KEY (devis_origine_id) REFERENCES documents(id))');
+          await database.execAsync('INSERT INTO documents (id, type, numero, client_id, date_creation, date_echeance, statut, total, devis_origine_id) SELECT id, type, numero, client_id, date_creation, date_echeance, statut, total, devis_origine_id FROM documents_legacy');
+          await database.execAsync('DROP TABLE documents_legacy');
+        });
+      }
       return database;
     });
   }
