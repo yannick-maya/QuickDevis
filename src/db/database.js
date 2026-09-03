@@ -6,7 +6,7 @@ const schema = `
 PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS clients (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT NOT NULL, email TEXT, telephone TEXT, adresse TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS produits (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT NOT NULL, prix_unitaire REAL NOT NULL, unite TEXT DEFAULT 'unité');
-CREATE TABLE IF NOT EXISTS documents (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT CHECK(type IN ('devis', 'facture')) NOT NULL, numero TEXT UNIQUE NOT NULL, client_id INTEGER NOT NULL, date_creation TEXT DEFAULT CURRENT_TIMESTAMP, date_echeance TEXT, statut TEXT DEFAULT 'brouillon', total REAL DEFAULT 0, devis_origine_id INTEGER, FOREIGN KEY (client_id) REFERENCES clients(id), FOREIGN KEY (devis_origine_id) REFERENCES documents(id));
+CREATE TABLE IF NOT EXISTS documents (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT CHECK(type IN ('devis', 'facture')) NOT NULL, numero TEXT UNIQUE NOT NULL, client_id INTEGER, date_creation TEXT DEFAULT CURRENT_TIMESTAMP, date_echeance TEXT, statut TEXT DEFAULT 'brouillon', total REAL DEFAULT 0, devis_origine_id INTEGER, FOREIGN KEY (client_id) REFERENCES clients(id), FOREIGN KEY (devis_origine_id) REFERENCES documents(id));
 CREATE TABLE IF NOT EXISTS document_lignes (id INTEGER PRIMARY KEY AUTOINCREMENT, document_id INTEGER NOT NULL, produit_id INTEGER, type_ligne TEXT CHECK(type_ligne IN ('produit', 'main_oeuvre', 'libre')) DEFAULT 'produit', description TEXT NOT NULL, quantite REAL NOT NULL, prix_unitaire REAL NOT NULL, total_ligne REAL NOT NULL, FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE, FOREIGN KEY (produit_id) REFERENCES produits(id));
 CREATE TABLE IF NOT EXISTS entreprise (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, logo_uri TEXT, adresse TEXT, telephone TEXT, email TEXT);
 `;
@@ -68,12 +68,12 @@ export async function listDocuments(filters = {}) {
   if (filters.type) { clauses.push('documents.type = ?'); values.push(filters.type); }
   if (filters.statut) { clauses.push('documents.statut = ?'); values.push(filters.statut); }
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-  return database.getAllAsync(`SELECT documents.*, clients.nom AS client_nom FROM documents JOIN clients ON clients.id = documents.client_id ${where} ORDER BY date_creation DESC`, values);
+  return database.getAllAsync(`SELECT documents.*, clients.nom AS client_nom FROM documents LEFT JOIN clients ON clients.id = documents.client_id ${where} ORDER BY date_creation DESC`, values);
 }
 
 export async function getDocument(id) {
   const database = await getDatabase();
-  const document = await database.getFirstAsync('SELECT documents.*, clients.nom AS client_nom FROM documents JOIN clients ON clients.id = documents.client_id WHERE documents.id = ?', id);
+  const document = await database.getFirstAsync('SELECT documents.*, clients.nom AS client_nom FROM documents LEFT JOIN clients ON clients.id = documents.client_id WHERE documents.id = ?', id);
   if (!document) return null;
   const lines = await database.getAllAsync('SELECT * FROM document_lignes WHERE document_id = ? ORDER BY id', id);
   return { ...document, lines };
@@ -90,7 +90,7 @@ export async function convertQuoteToInvoice(quoteId) {
   if (!quote || quote.type !== 'devis') throw new Error('Devis introuvable');
   const numero = `FAC-${Date.now()}`;
   return database.withTransactionAsync(async () => {
-    const invoice = await database.runAsync('INSERT INTO documents (type, numero, client_id, total, devis_origine_id) VALUES (?, ?, ?, ?, ?)', 'facture', numero, quote.client_id, quote.total, quote.id);
+    const invoice = await database.runAsync('INSERT INTO documents (type, numero, client_id, total, devis_origine_id) VALUES (?, ?, ?, ?, ?)', 'facture', numero, quote.client_id || null, quote.total, quote.id);
     for (const line of quote.lines) {
       await database.runAsync('INSERT INTO document_lignes (document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) VALUES (?, ?, ?, ?, ?, ?, ?)', invoice.lastInsertRowId, line.produit_id, line.type_ligne, line.description, line.quantite, line.prix_unitaire, line.total_ligne);
     }
@@ -104,7 +104,7 @@ export async function createDocument({ type, clientId, lines }) {
   const numero = `${prefix}-${Date.now()}`;
   const total = lines.reduce((sum, line) => sum + line.quantite * line.prix_unitaire, 0);
   return database.withTransactionAsync(async () => {
-    const document = await database.runAsync('INSERT INTO documents (type, numero, client_id, total) VALUES (?, ?, ?, ?)', type, numero, clientId, total);
+    const document = await database.runAsync('INSERT INTO documents (type, numero, client_id, total) VALUES (?, ?, ?, ?)', type, numero, clientId || null, total);
     for (const line of lines) {
       await database.runAsync('INSERT INTO document_lignes (document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) VALUES (?, ?, ?, ?, ?, ?, ?)', document.lastInsertRowId, line.produit_id || null, line.type_ligne, line.description, line.quantite, line.prix_unitaire, line.quantite * line.prix_unitaire);
     }

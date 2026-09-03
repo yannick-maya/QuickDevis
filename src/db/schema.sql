@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS documents (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   type TEXT CHECK(type IN ('devis', 'facture')) NOT NULL,
   numero TEXT UNIQUE NOT NULL,
-  client_id INTEGER NOT NULL,
+  client_id INTEGER,
   date_creation TEXT DEFAULT CURRENT_TIMESTAMP,
   date_echeance TEXT,
   statut TEXT DEFAULT 'brouillon',
