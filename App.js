@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import DashboardScreen from './src/screens/DashboardScreen';
 import ClientsScreen from './src/screens/ClientsScreen';
+import ProductsScreen from './src/screens/ProductsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -12,7 +13,7 @@ function DocumentsScreen() {
 }
 
 export default function App() {
-  return <NavigationContainer><StatusBar style="dark" /><Stack.Navigator screenOptions={{ headerTintColor: '#203B35', headerTitleStyle: { fontWeight: '800' }, headerStyle: { backgroundColor: '#F7F4EE' }, contentStyle: { backgroundColor: '#F7F4EE' } }}><Stack.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'QuickDevis' }} /><Stack.Screen name="Clients" component={ClientsScreen} options={{ title: 'Clients' }} /><Stack.Screen name="Documents" component={DocumentsScreen} options={{ title: 'Devis & Factures' }} /></Stack.Navigator></NavigationContainer>;
+  return <NavigationContainer><StatusBar style="dark" /><Stack.Navigator screenOptions={{ headerTintColor: '#203B35', headerTitleStyle: { fontWeight: '800' }, headerStyle: { backgroundColor: '#F7F4EE' }, contentStyle: { backgroundColor: '#F7F4EE' } }}><Stack.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'QuickDevis' }} /><Stack.Screen name="Clients" component={ClientsScreen} options={{ title: 'Clients' }} /><Stack.Screen name="Products" component={ProductsScreen} options={{ title: 'Produits & Services' }} /><Stack.Screen name="Documents" component={DocumentsScreen} options={{ title: 'Devis & Factures' }} /></Stack.Navigator></NavigationContainer>;
 }
 
 const styles = StyleSheet.create({

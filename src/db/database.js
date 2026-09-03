@@ -41,6 +41,31 @@ export async function deleteClient(id) {
   await database.runAsync('DELETE FROM clients WHERE id = ?', id);
 }
 
+export async function listProducts(search = '') {
+  const database = await getDatabase();
+  return database.getAllAsync('SELECT * FROM produits WHERE nom LIKE ? ORDER BY nom', [`%${search}%`]);
+}
+
+export async function saveProduct(product) {
+  const database = await getDatabase();
+  if (product.id) {
+    await database.runAsync('UPDATE produits SET nom = ?, prix_unitaire = ?, unite = ? WHERE id = ?', product.nom, product.prix_unitaire, product.unite || 'unité', product.id);
+    return product.id;
+  }
+  const result = await database.runAsync('INSERT INTO produits (nom, prix_unitaire, unite) VALUES (?, ?, ?)', product.nom, product.prix_unitaire, product.unite || 'unité');
+  return result.lastInsertRowId;
+}
+
+export async function deleteProduct(id) {
+  const database = await getDatabase();
+  await database.runAsync('DELETE FROM produits WHERE id = ?', id);
+}
+
+export async function listDocuments() {
+  const database = await getDatabase();
+  return database.getAllAsync('SELECT documents.*, clients.nom AS client_nom FROM documents JOIN clients ON clients.id = documents.client_id ORDER BY date_creation DESC');
+}
+
 export async function getDashboardStats() {
   const database = await getDatabase();
   const clients = await database.getFirstAsync('SELECT COUNT(*) AS total FROM clients');

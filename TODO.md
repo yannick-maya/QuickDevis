@@ -23,7 +23,7 @@
 - [x] Créer `src/db/schema.sql` avec les tables : `clients`, `produits`, `documents`, `document_lignes`, `entreprise` (paramètres/infos société pour le PDF)
 - [x] Créer `src/db/database.js` (init de la connexion + exécution du schéma au premier lancement)
 - [x] Fonctions CRUD clients (créer, lire, modifier, supprimer, rechercher)
-- [ ] Fonctions CRUD produits/services
+- [x] Fonctions CRUD produits/services
 - [ ] Fonctions CRUD documents (devis/factures) + leurs lignes (produit, main d'œuvre, ou ligne libre)
 - [ ] Fonction "convertir devis en facture" (duplique le document avec `type = 'facture'`, garde le lien historique)
 - [ ] Fonctions de stats pour le dashboard (nb clients, total facturé, total en attente, etc.)
@@ -33,8 +33,8 @@
 - [x] Liste clients (recherche/filtre)
 - [ ] Fiche client (infos + historique de ses devis/factures)
 - [ ] Formulaire ajout/édition client
-- [ ] Liste produits/services
-- [ ] Formulaire ajout/édition produit
+- [x] Liste produits/services
+- [x] Formulaire ajout/édition produit
 - [ ] Liste devis/factures (filtres : type, statut, date)
 - [ ] Formulaire création devis/facture (choix client + lignes depuis produits, ligne libre, ou **ligne main d'œuvre** avec champ dédié pour le prix de main d'œuvre)
 - [ ] Détail d'un document + bouton "Convertir en facture" (si devis)
