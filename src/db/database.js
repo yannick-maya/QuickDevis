@@ -110,13 +110,15 @@ export async function convertQuoteToInvoice(quoteId) {
   const quote = await getDocument(quoteId);
   if (!quote || quote.type !== 'devis') throw new Error('Devis introuvable');
   const numero = `FAC-${Date.now()}`;
-  return database.withTransactionAsync(async () => {
+  let invoiceId;
+  await database.withTransactionAsync(async () => {
     const invoice = await database.runAsync('INSERT INTO documents (type, numero, client_id, total, devis_origine_id) VALUES (?, ?, ?, ?, ?)', 'facture', numero, quote.client_id || null, quote.total, quote.id);
+    invoiceId = invoice.lastInsertRowId;
     for (const line of quote.lines) {
-      await database.runAsync('INSERT INTO document_lignes (document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) VALUES (?, ?, ?, ?, ?, ?, ?)', invoice.lastInsertRowId, line.produit_id, line.type_ligne, line.description, line.quantite, line.prix_unitaire, line.total_ligne);
+      await database.runAsync('INSERT INTO document_lignes (document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) VALUES (?, ?, ?, ?, ?, ?, ?)', invoiceId, line.produit_id, line.type_ligne, line.description, line.quantite, line.prix_unitaire, line.total_ligne);
     }
-    return invoice.lastInsertRowId;
   });
+  return invoiceId;
 }
 
 export async function createDocument({ type, clientId, lines }) {
@@ -124,13 +126,15 @@ export async function createDocument({ type, clientId, lines }) {
   const prefix = type === 'facture' ? 'FAC' : 'DEV';
   const numero = `${prefix}-${Date.now()}`;
   const total = lines.reduce((sum, line) => sum + line.quantite * line.prix_unitaire, 0);
-  return database.withTransactionAsync(async () => {
+  let documentId;
+  await database.withTransactionAsync(async () => {
     const document = await database.runAsync('INSERT INTO documents (type, numero, client_id, total) VALUES (?, ?, ?, ?)', type, numero, clientId || null, total);
+    documentId = document.lastInsertRowId;
     for (const line of lines) {
-      await database.runAsync('INSERT INTO document_lignes (document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) VALUES (?, ?, ?, ?, ?, ?, ?)', document.lastInsertRowId, line.produit_id || null, line.type_ligne, line.description, line.quantite, line.prix_unitaire, line.quantite * line.prix_unitaire);
+      await database.runAsync('INSERT INTO document_lignes (document_id, produit_id, type_ligne, description, quantite, prix_unitaire, total_ligne) VALUES (?, ?, ?, ?, ?, ?, ?)', documentId, line.produit_id || null, line.type_ligne, line.description, line.quantite, line.prix_unitaire, line.quantite * line.prix_unitaire);
     }
-    return document.lastInsertRowId;
   });
+  return documentId;
 }
 
 export async function getDashboardStats() {
