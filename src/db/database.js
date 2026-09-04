@@ -92,6 +92,21 @@ export async function listDocuments(filters = {}) {
   return database.getAllAsync(`SELECT documents.*, clients.nom AS client_nom FROM documents LEFT JOIN clients ON clients.id = documents.client_id ${where} ORDER BY date_creation DESC`, values);
 }
 
+export async function getDocumentStats(filters = {}) {
+  const documents = await listDocuments(filters);
+  return {
+    total: documents.length,
+    devis: documents.filter((document) => document.type === 'devis').length,
+    factures: documents.filter((document) => document.type === 'facture').length,
+    brouillons: documents.filter((document) => document.statut === 'brouillon').length,
+    payes: documents.filter((document) => document.statut === 'payé').length,
+    envoyes: documents.filter((document) => document.statut === 'envoyé').length,
+    montantTotal: documents.reduce((sum, document) => sum + Number(document.total || 0), 0),
+    montantPaye: documents.filter((document) => document.statut === 'payé').reduce((sum, document) => sum + Number(document.total || 0), 0),
+    montantAttente: documents.filter((document) => document.type === 'facture' && !['payé', 'annulé'].includes(document.statut)).reduce((sum, document) => sum + Number(document.total || 0), 0),
+  };
+}
+
 export async function getDocument(id) {
   const database = await getDatabase();
   const document = await database.getFirstAsync('SELECT documents.*, clients.nom AS client_nom FROM documents LEFT JOIN clients ON clients.id = documents.client_id WHERE documents.id = ?', id);

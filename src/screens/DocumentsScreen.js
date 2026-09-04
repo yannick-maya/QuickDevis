@@ -1,14 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { createDocument, listClients, listDocuments, listProducts } from '../db/database';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { createDocument, listClients, listProducts } from '../db/database';
 import { formatMoney } from '../utils/format';
 
 const steps = [{ label: 'Document', caption: 'Type et client' }, { label: 'Articles', caption: 'Produits et services' }, { label: 'Finaliser', caption: 'Vérification' }];
 const lineTypes = [{ value: 'produit', label: 'Produit', hint: 'Depuis votre catalogue' }, { value: 'libre', label: 'Ligne libre', hint: 'Description personnalisée' }, { value: 'main_oeuvre', label: 'Main-d’œuvre', hint: 'Service ou intervention' }];
 
 export default function DocumentsScreen({ navigation }) {
-  const [documents, setDocuments] = useState([]);
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
   const [step, setStep] = useState(0);
@@ -21,10 +20,8 @@ export default function DocumentsScreen({ navigation }) {
   const [quantity, setQuantity] = useState('1');
   const [price, setPrice] = useState('');
   const [lines, setLines] = useState([]);
-  const [filterType, setFilterType] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
 
-  const refresh = useCallback(() => Promise.all([listDocuments({ type: filterType, statut: filterStatus }), listClients(), listProducts()]).then(([nextDocuments, nextClients, nextProducts]) => { setDocuments(nextDocuments); setClients(nextClients); setProducts(nextProducts); }).catch(() => {}), [filterStatus, filterType]);
+  const refresh = useCallback(() => Promise.all([listClients(), listProducts()]).then(([nextClients, nextProducts]) => { setClients(nextClients); setProducts(nextProducts); }).catch(() => {}), []);
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.quantite * line.prix_unitaire, 0), [lines]);
@@ -57,7 +54,6 @@ export default function DocumentsScreen({ navigation }) {
 
     {step === 2 && <View style={styles.card}><Text style={styles.cardEyebrow}>ÉTAPE 3</Text><Text style={styles.cardTitle}>Vérifiez avant d’enregistrer</Text><Text style={styles.fieldHint}>Votre document sera créé en brouillon. Vous pourrez ensuite le marquer envoyé ou payé.</Text><View style={styles.summaryHero}><Text style={styles.summaryType}>{type === 'devis' ? 'DEVIS' : 'FACTURE'}</Text><Text style={styles.summaryTotal}>{formatMoney(total)}</Text><Text style={styles.summaryDetail}>{lines.length} ligne(s) · {clientId ? clients.find((client) => client.id === clientId)?.nom : 'Sans client'}</Text></View>{lines.length === 0 ? <Text style={styles.emptyText}>Aucune ligne ajoutée. Retournez à l’étape Articles.</Text> : lines.map((line, index) => <View style={styles.summaryLine} key={`${line.description}-${index}`}><Text style={styles.cartLineName}>{line.description}</Text><Text style={styles.cartLineTotal}>{formatMoney(line.quantite * line.prix_unitaire)}</Text></View>)}<View style={styles.navigationRow}><Pressable style={styles.backButton} onPress={() => setStep(1)}><Text style={styles.backText}>Modifier</Text></Pressable><Pressable style={styles.primaryButtonFlex} onPress={save}><Text style={styles.primaryText}>Enregistrer le {type}</Text></Pressable></View></View>}
 
-    <Text style={styles.recentTitle}>Documents récents</Text><FlatList scrollEnabled={false} data={documents} keyExtractor={(item) => String(item.id)} ListEmptyComponent={<Text style={styles.emptyText}>Aucun document créé.</Text>} renderItem={({ item }) => <Pressable onPress={() => navigation.navigate('DocumentDetail', { id: item.id })} style={styles.recentRow}><View><Text style={styles.recentNumber}>{item.numero}</Text><Text style={styles.recentDetail}>{item.client_nom || 'Sans client'} · {item.type} · {item.statut}</Text></View><Text style={styles.recentTotal}>{formatMoney(item.total)}</Text></Pressable>} />
   </ScrollView>;
 }
 
