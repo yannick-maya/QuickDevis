@@ -7,6 +7,7 @@ const items = [
   ['Products', 'Produits & services'],
   ['History', 'Historique'],
   ['Settings', 'Paramètres et sauvegarde'],
+  ['Guide', 'Guide d’utilisation'],
 ];
 
 export default function MenuScreen({ navigation }) {

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS clients (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TE
 CREATE TABLE IF NOT EXISTS produits (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT NOT NULL, prix_unitaire REAL NOT NULL, unite TEXT DEFAULT 'unité');
 CREATE TABLE IF NOT EXISTS documents (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT CHECK(type IN ('devis', 'facture')) NOT NULL, numero TEXT UNIQUE NOT NULL, client_id INTEGER, date_creation TEXT DEFAULT CURRENT_TIMESTAMP, date_echeance TEXT, statut TEXT DEFAULT 'brouillon', total REAL DEFAULT 0, devis_origine_id INTEGER, FOREIGN KEY (client_id) REFERENCES clients(id), FOREIGN KEY (devis_origine_id) REFERENCES documents(id));
 CREATE TABLE IF NOT EXISTS document_lignes (id INTEGER PRIMARY KEY AUTOINCREMENT, document_id INTEGER NOT NULL, produit_id INTEGER, type_ligne TEXT CHECK(type_ligne IN ('produit', 'main_oeuvre', 'libre')) DEFAULT 'produit', description TEXT NOT NULL, quantite REAL NOT NULL, prix_unitaire REAL NOT NULL, total_ligne REAL NOT NULL, FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE, FOREIGN KEY (produit_id) REFERENCES produits(id));
-CREATE TABLE IF NOT EXISTS entreprise (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, logo_uri TEXT, adresse TEXT, telephone TEXT, email TEXT);
+CREATE TABLE IF NOT EXISTS entreprise (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, logo_uri TEXT, adresse TEXT, telephone TEXT, email TEXT, settings_json TEXT);
 `;
 
 export async function getDatabase() {
@@ -25,6 +25,8 @@ export async function getDatabase() {
           await database.execAsync('DROP TABLE documents_legacy');
         });
       }
+      const companyColumns = await database.getAllAsync('PRAGMA table_info(entreprise)');
+      if (!companyColumns.some((column) => column.name === 'settings_json')) await database.execAsync('ALTER TABLE entreprise ADD COLUMN settings_json TEXT');
       const lineForeignKeys = await database.getAllAsync('PRAGMA foreign_key_list(document_lignes)');
       if (lineForeignKeys.some((foreignKey) => foreignKey.table === 'documents_legacy')) {
         await database.withTransactionAsync(async () => {
@@ -163,17 +165,19 @@ export async function getDashboardStats() {
 
 export async function getCompany() {
   const database = await getDatabase();
-  return database.getFirstAsync('SELECT * FROM entreprise ORDER BY id LIMIT 1');
+  const company = await database.getFirstAsync('SELECT * FROM entreprise ORDER BY id LIMIT 1');
+  if (!company) return null;
+  return { ...company, settings: company.settings_json ? JSON.parse(company.settings_json) : {} };
 }
 
 export async function saveCompany(company) {
   const database = await getDatabase();
   const current = await getCompany();
   if (current) {
-    await database.runAsync('UPDATE entreprise SET nom = ?, adresse = ?, telephone = ?, email = ?, logo_uri = ? WHERE id = ?', company.nom || null, company.adresse || null, company.telephone || null, company.email || null, company.logo_uri || null, current.id);
+    await database.runAsync('UPDATE entreprise SET nom = ?, adresse = ?, telephone = ?, email = ?, logo_uri = ?, settings_json = ? WHERE id = ?', company.nom || null, company.adresse || null, company.telephone || null, company.email || null, company.logo_uri || null, JSON.stringify(company.settings || {}), current.id);
     return current.id;
   }
-  const result = await database.runAsync('INSERT INTO entreprise (nom, adresse, telephone, email, logo_uri) VALUES (?, ?, ?, ?, ?)', company.nom || null, company.adresse || null, company.telephone || null, company.email || null, company.logo_uri || null);
+  const result = await database.runAsync('INSERT INTO entreprise (nom, adresse, telephone, email, logo_uri, settings_json) VALUES (?, ?, ?, ?, ?, ?)', company.nom || null, company.adresse || null, company.telephone || null, company.email || null, company.logo_uri || null, JSON.stringify(company.settings || {}));
   return result.lastInsertRowId;
 }
 
@@ -183,4 +187,15 @@ export async function exportDatabaseData() {
     database.getAllAsync('SELECT * FROM clients'), database.getAllAsync('SELECT * FROM produits'), database.getAllAsync('SELECT * FROM documents'), database.getAllAsync('SELECT * FROM document_lignes'), getCompany(),
   ]);
   return { exportedAt: new Date().toISOString(), company, clients, products, documents, lines };
+}
+
+export async function resetLocalData() {
+  const database = await getDatabase();
+  await database.withTransactionAsync(async () => {
+    await database.runAsync('DELETE FROM document_lignes');
+    await database.runAsync('DELETE FROM documents');
+    await database.runAsync('DELETE FROM produits');
+    await database.runAsync('DELETE FROM clients');
+    await database.runAsync('DELETE FROM entreprise');
+  });
 }

@@ -1,15 +1,16 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { convertQuoteToInvoice, getDocument, updateDocumentStatus } from '../db/database';
+import { convertQuoteToInvoice, getCompany, getDocument, updateDocumentStatus } from '../db/database';
 import { createDocumentPdf, shareDocumentPdf } from '../utils/pdf';
 import { formatMoney } from '../utils/format';
 
 export default function DocumentDetailScreen({ route, navigation }) {
   const [document, setDocument] = useState(null);
+  const [company, setCompany] = useState({});
   const [loadError, setLoadError] = useState('');
   const [showPreview, setShowPreview] = useState(Boolean(route.params?.preview));
-  const load = useCallback(() => { setLoadError(''); getDocument(route.params.id).then((value) => { if (!value) throw new Error('Document introuvable.'); setDocument(value); }).catch((error) => setLoadError(error?.message || 'Impossible de charger le document.')); }, [route.params.id]);
+  const load = useCallback(() => { setLoadError(''); Promise.all([getDocument(route.params.id), getCompany()]).then(([value, savedCompany]) => { if (!value) throw new Error('Document introuvable.'); setDocument(value); setCompany(savedCompany || {}); }).catch((error) => setLoadError(error?.message || 'Impossible de charger le document.')); }, [route.params.id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   async function convert() {
@@ -17,11 +18,11 @@ export default function DocumentDetailScreen({ route, navigation }) {
   }
 
   async function generatePdf() {
-    try { await createDocumentPdf(document); Alert.alert('PDF généré', 'Le fichier PDF est prêt. Utilisez Partager le PDF pour l’envoyer.'); } catch { Alert.alert('Erreur', 'Impossible de générer le PDF.'); }
+    try { await createDocumentPdf(document, company); Alert.alert('PDF généré', 'Le fichier PDF est prêt. Utilisez Partager le PDF pour l’envoyer.'); } catch { Alert.alert('Erreur', 'Impossible de générer le PDF.'); }
   }
 
   async function sharePdf() {
-    try { await shareDocumentPdf(document); } catch { Alert.alert('Erreur', 'Impossible de partager le PDF.'); }
+    try { await shareDocumentPdf(document, company); } catch { Alert.alert('Erreur', 'Impossible de partager le PDF.'); }
   }
 
   async function changeStatus(status) {

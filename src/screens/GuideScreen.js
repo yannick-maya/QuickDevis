@@ -1,0 +1,16 @@
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+
+const chapters = [
+  ['1', 'Commencer', 'Depuis l’accueil, appuyez sur Nouveau devis pour créer un devis ou une facture. Le parcours vous guide jusqu’au récapitulatif.'],
+  ['2', 'Choisir un client', 'Le client est facultatif. Recherchez un client existant ou continuez sans client. Vous pourrez compléter les informations plus tard.'],
+  ['3', 'Ajouter des lignes', 'Ajoutez un produit du catalogue, une ligne libre ou une prestation de main-d’œuvre. Le prix enregistré d’un produit est repris automatiquement.'],
+  ['4', 'Valider le document', 'Vérifiez les lignes et le total, puis enregistrez. Le document est créé en brouillon et son aperçu s’ouvre dans le détail.'],
+  ['5', 'Suivre et partager', 'Depuis le détail, affichez le tableau, générez le PDF, partagez-le et changez son statut en envoyé ou payé.'],
+  ['6', 'Historique et sauvegarde', 'Historique regroupe vos documents et ses filtres affichent vos KPI. Paramètres permet d’exporter vos données JSON et de personnaliser les PDF.'],
+];
+
+export default function GuideScreen() {
+  return <ScrollView style={styles.screen} contentContainerStyle={styles.content}><Text style={styles.kicker}>CENTRE D’AIDE</Text><Text style={styles.title}>Guide d’utilisation</Text><Text style={styles.intro}>QuickDevis vous aide à préparer des documents professionnels, suivre vos encaissements et conserver vos données localement.</Text>{chapters.map(([number, title, text]) => <View style={styles.chapter} key={number}><View style={styles.number}><Text style={styles.numberText}>{number}</Text></View><View style={styles.chapterCopy}><Text style={styles.chapterTitle}>{title}</Text><Text style={styles.chapterText}>{text}</Text></View></View>)}<View style={styles.signature}><Text style={styles.signatureLabel}>Votre contact</Text><Text style={styles.signatureName}>Ing. Yannick MADJIADOUM</Text><Text style={styles.signatureText}>+235 65234480 / +228 70772542</Text><Text style={styles.signatureText}>yannickmadjiadoum@gmail.com</Text></View></ScrollView>;
+}
+
+const styles = StyleSheet.create({ screen: { backgroundColor: '#F5F8FC', flex: 1 }, content: { padding: 22, paddingBottom: 52 }, kicker: { color: '#1677FF', fontSize: 11, fontWeight: '900', letterSpacing: 1.5 }, title: { color: '#1459C7', fontSize: 30, fontWeight: '900', marginTop: 8 }, intro: { color: '#607A9F', fontSize: 15, lineHeight: 23, marginBottom: 22, marginTop: 10 }, chapter: { backgroundColor: '#FFFFFF', borderColor: '#D7E5F5', borderRadius: 12, borderWidth: 1, flexDirection: 'row', marginBottom: 10, padding: 16 }, number: { alignItems: 'center', backgroundColor: '#1677FF', borderRadius: 18, height: 36, justifyContent: 'center', width: 36 }, numberText: { color: '#FFFFFF', fontSize: 16, fontWeight: '900' }, chapterCopy: { flex: 1, paddingLeft: 14 }, chapterTitle: { color: '#1459C7', fontSize: 16, fontWeight: '900' }, chapterText: { color: '#607A9F', fontSize: 13, lineHeight: 20, marginTop: 5 }, signature: { backgroundColor: '#1459C7', borderRadius: 12, marginTop: 22, padding: 20 }, signatureLabel: { color: '#A9C9FF', fontSize: 11, fontWeight: '900', letterSpacing: 1.2 }, signatureName: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginTop: 10 }, signatureText: { color: '#D7E5FF', fontSize: 13, marginTop: 5 } });
